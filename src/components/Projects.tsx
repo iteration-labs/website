@@ -4,7 +4,7 @@ import { Reveal } from './Reveal';
 
 export function Projects() {
   return (
-    <section id="projects" className="container-shell mt-28 sm:mt-40">
+    <section id="projects" className="container-shell relative mt-28 sm:mt-40">
       <span aria-hidden="true" className="pastel-wash wash-yellow left-[10%] top-10 hidden h-16 w-28 lg:block" />
       <span aria-hidden="true" className="pastel-wash wash-blue right-[16%] top-52 hidden h-24 w-24 lg:block" />
       <div className="section-rule">
@@ -20,7 +20,7 @@ export function Projects() {
           </div>
         </Reveal>
 
-        <div className="mt-14 grid gap-0">
+        <div className="mt-14 grid gap-8 sm:mt-16 sm:gap-10">
           {projects.map((project, index) => (
             <ProjectCard key={project.slug} project={project} index={index} />
           ))}

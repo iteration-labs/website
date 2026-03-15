@@ -4,7 +4,7 @@
 
 :root {
   color: #1a1816;
-  background: #fdfcf9;
+  background: #fbfbf8;
   font-family: "Inter", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -20,9 +20,10 @@ body {
   margin: 0;
   min-width: 320px;
   background:
-    radial-gradient(circle at 16% 14%, rgba(245, 201, 167, 0.08), transparent 14%),
-    radial-gradient(circle at 82% 10%, rgba(170, 196, 255, 0.07), transparent 14%),
-    #fdfcf9;
+    radial-gradient(circle at 16% 14%, rgba(245, 201, 167, 0.045), transparent 14%),
+    radial-gradient(circle at 82% 10%, rgba(170, 196, 255, 0.055), transparent 14%),
+    radial-gradient(circle at 46% 74%, rgba(186, 208, 184, 0.035), transparent 18%),
+    #fbfbf8;
   color: #1a1816;
 }
 
@@ -186,7 +187,7 @@ body {
 
   .editorial-panel {
     @apply relative border border-line/65 bg-paper;
-    background-color: rgba(253, 252, 249, 0.88);
+    background-color: rgba(251, 251, 248, 0.9);
     box-shadow: 0 20px 60px rgba(26, 24, 22, 0.04);
   }
 }
