@@ -5,9 +5,15 @@ import { Hero } from './components/Hero';
 import { Manifesto } from './components/Manifesto';
 import { Projects } from './components/Projects';
 import { PageConnector } from './components/Scribbles';
+import { SecondNatureDemo } from './pages/SecondNatureDemo';
 
 export default function App() {
   const prefersReducedMotion = useReducedMotion();
+  const pathname = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '') || '/' : '/';
+
+  if (pathname === '/second-nature') {
+    return <SecondNatureDemo />;
+  }
 
   return (
     <div className="paper-noise relative overflow-hidden">
