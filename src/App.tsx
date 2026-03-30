@@ -6,6 +6,7 @@ import { Manifesto } from './components/Manifesto';
 import { Projects } from './components/Projects';
 import { PageConnector } from './components/Scribbles';
 import { SecondNatureDemo } from './pages/SecondNatureDemo';
+import { BuyerControlPanel } from './pages/BuyerControlPanel';
 
 export default function App() {
   const prefersReducedMotion = useReducedMotion();
@@ -13,6 +14,10 @@ export default function App() {
 
   if (pathname === '/second-nature') {
     return <SecondNatureDemo />;
+  }
+
+  if (pathname === '/buyer-control-panel-demo') {
+    return <BuyerControlPanel />;
   }
 
   return (

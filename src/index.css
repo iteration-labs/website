@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Sora:wght@400;500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -189,5 +191,22 @@ body {
     @apply relative border border-line/65 bg-paper;
     background-color: rgba(251, 251, 248, 0.9);
     box-shadow: 0 20px 60px rgba(26, 24, 22, 0.04);
+  }
+
+  /* Buyer control panel utilities */
+  .section-card {
+    @apply rounded-3xl bg-white/80 shadow-bcp-card backdrop-blur-sm;
+  }
+
+  .section-title {
+    @apply text-xs uppercase tracking-[0.32em] text-ink-400;
+  }
+
+  .stat-pill {
+    @apply rounded-full bg-fog-100 px-3 py-1 text-xs font-medium text-ink-600;
+  }
+
+  .subtle-divider {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-fog-200 to-transparent;
   }
 }
