@@ -1,141 +1,155 @@
 import { useState } from 'react';
 import type { CostItem } from './data';
+import { AED_TO_SGD, depositCheque } from './data';
 
 type CostLedgerProps = {
   items: CostItem[];
-  currentStage: string;
-  nextStage: string;
+  propertyPriceAED: number;
+  downPaymentAED: number;
+  loanAmountAED: number;
+  currentStageId: number;
 };
 
-export default function CostLedger({ items, currentStage, nextStage }: CostLedgerProps) {
-  const requiredNow = items.filter((item) => item.dueStage === currentStage);
-  const requiredNext = items.filter((item) => item.dueStage === nextStage);
-  const majorUpcoming = items.filter((item) =>
-    item.dueStage.toLowerCase().includes("transfer")
+function fmtAED(n: number): string {
+  if (n >= 1_000_000) return `AED ${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `AED ${Math.round(n / 1_000)}k`;
+  return `AED ${n.toLocaleString()}`;
+}
+
+function fmtSGD(aed: number): string {
+  const sgd = aed * AED_TO_SGD;
+  if (sgd >= 1_000_000) return `~SGD ${(sgd / 1_000_000).toFixed(2)}M`;
+  if (sgd >= 1_000) return `~SGD ${Math.round(sgd / 1_000)}k`;
+  return `~SGD ${Math.round(sgd).toLocaleString()}`;
+}
+
+function DualAmount({ aed }: { aed: number }) {
+  return (
+    <div className="text-right">
+      <p className="text-sm font-semibold text-ink-950">{fmtAED(aed)}</p>
+      <p className="text-xs text-ink-400">{fmtSGD(aed)}</p>
+    </div>
   );
+}
 
-  const [openKey, setOpenKey] = useState<"now" | "next" | "transfer" | null>("next");
+export default function CostLedger({
+  items,
+  propertyPriceAED,
+  downPaymentAED,
+  loanAmountAED,
+  currentStageId,
+}: CostLedgerProps) {
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
-  const headlineAmount = (list: CostItem[]) => {
-    if (list.length === 0) return "None";
-    const primary = list[0].expectedRange;
-    return list.length > 1 ? `${primary} +` : primary;
-  };
-
-  const timingHint = (item: CostItem) => {
-    if (item.dueStage === currentStage) return "Now";
-    if (item.dueStage === nextStage) return "Next ~1–2 weeks";
-    if (item.dueStage.toLowerCase().includes("transfer")) return "At transfer";
-    return `Later · ~${item.dueInWeeks} weeks`;
-  };
-
-  const parseAED = (value?: string) => {
-    if (!value) return 0;
-    const normalized = value.replace(/,/g, "").toLowerCase();
-    const number = Number(normalized.replace(/[^0-9.]/g, ""));
-    if (Number.isNaN(number)) return 0;
-    if (normalized.includes("k")) return number * 1000;
-    if (normalized.includes("m")) return number * 1_000_000;
-    return number;
-  };
-
-  const estimatedTotal = items.reduce((sum, item) => sum + parseAED(item.quotedAmount), 0);
-  const formatAED = (amount: number) => {
-    if (amount >= 1_000_000) return `AED ${(amount / 1_000_000).toFixed(1)}M`;
-    if (amount >= 1000) return `AED ${(amount / 1000).toFixed(0)}k`;
-    return `AED ${amount.toFixed(0)}`;
-  };
-
-  const checkpoints: Array<{ key: "now" | "next" | "transfer"; label: string; items: CostItem[] }> = [
-    { key: "now", label: "Now", items: requiredNow },
-    { key: "next", label: "Next", items: requiredNext },
-    { key: "transfer", label: "Transfer", items: majorUpcoming }
-  ];
+  const totalClosingCosts = items.reduce((sum, item) => sum + item.amountAED, 0);
+  const nextItem = items.find((item) => item.dueStageId > currentStageId);
+  const transferItems = items.filter((item) => item.dueStageId === 7);
 
   return (
     <section className="section-card p-6 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="section-title">Cost ledger</p>
-          <h2 className="mt-2 font-display text-2xl text-ink-950">Cost expectations</h2>
-          <p className="mt-1 text-sm text-ink-600">Estimates only; final amounts can change.</p>
+          <p className="section-title">Money plan</p>
+          <h2 className="mt-2 font-display text-2xl text-ink-950">What you'll need & when</h2>
+          <p className="mt-1 text-sm text-ink-400">Estimates only · Not financial advice · Based on AED 1 ≈ SGD 0.35</p>
         </div>
-        <span className="stat-pill">Cash readiness</span>
       </div>
 
-      <div className="mt-6 rounded-2xl bg-fog-50 px-5 py-4">
-        <div className="relative mt-2 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div className="absolute left-0 top-5 hidden h-px w-full bg-fog-200 md:block" />
-          {checkpoints.map((checkpoint, index) => {
-            const isOpen = openKey === checkpoint.key;
-            return (
-              <button
-                key={checkpoint.key}
-                type="button"
-                onClick={() => setOpenKey(isOpen ? null : checkpoint.key)}
-                className="relative z-10 flex w-full flex-col gap-2 rounded-2xl bg-white/80 px-4 py-3 text-left transition hover:bg-white md:w-1/3"
-                aria-expanded={isOpen}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`h-2 w-2 rounded-full ${
-                      index === 0 ? "bg-amber-500" : index === 1 ? "bg-reed-500" : "bg-ink-200"
-                    }`}
-                  />
-                  <p className="text-xs uppercase tracking-[0.2em] text-ink-400">
-                    {checkpoint.label}
-                  </p>
-                </div>
-                <p className={`text-base font-semibold ${checkpoint.key === "now" ? "text-amber-700" : "text-ink-950"}`}>
-                  {headlineAmount(checkpoint.items)}
-                </p>
-                <p className="text-xs text-ink-400">
-                  {checkpoint.key === "now" ? "Have ready now" : checkpoint.key === "next" ? "Coming up next" : "At transfer"}
-                </p>
-              </button>
-            );
-          })}
+      {/* Investment overview */}
+      <div className="mt-6 rounded-2xl bg-fog-50 p-5">
+        <p className="text-xs uppercase tracking-[0.24em] text-ink-400">Investment overview</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div>
+            <p className="text-xs text-ink-400">Property price</p>
+            <p className="mt-1 text-lg font-semibold text-ink-950">{fmtAED(propertyPriceAED)}</p>
+            <p className="text-xs text-ink-400">{fmtSGD(propertyPriceAED)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-ink-400">Your down payment (40%)</p>
+            <p className="mt-1 text-lg font-semibold text-ink-950">{fmtAED(downPaymentAED)}</p>
+            <p className="text-xs text-ink-400">{fmtSGD(downPaymentAED)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-ink-400">Bank loan (60%)</p>
+            <p className="mt-1 text-lg font-semibold text-ink-950">{fmtAED(loanAmountAED)}</p>
+            <p className="text-xs text-ink-400">{fmtSGD(loanAmountAED)}</p>
+          </div>
         </div>
-        <p className="mt-4 text-sm font-medium text-ink-600">
-          Estimated total acquisition cost:{" "}
-          <span className="font-semibold text-ink-950">{formatAED(estimatedTotal)}</span>
-        </p>
       </div>
 
-      <div className="mt-6 space-y-4">
-        {checkpoints.map((checkpoint) => {
-          const isOpen = openKey === checkpoint.key;
-          if (!isOpen) return null;
-          return (
-            <div key={checkpoint.key} className="rounded-2xl bg-white/80 px-5 py-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-ink-400">
-                {checkpoint.label} breakdown
-              </p>
-              <div className="mt-3 space-y-3">
-                {checkpoint.items.length === 0 ? (
-                  <p className="text-sm text-ink-600">No payments expected in this window.</p>
-                ) : (
-                  checkpoint.items.map((item) => (
-                    <div key={item.name} className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-ink-950">{item.name}</p>
-                        <p className="text-xs text-ink-400">{timingHint(item)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-sm font-semibold ${checkpoint.key === "now" ? "text-amber-700" : "text-ink-900"}`}>
-                          {item.expectedRange}
-                        </p>
-                        {item.quotedAmount && item.quotedAmount !== item.expectedRange && (
-                          <p className="text-xs text-ink-400">Quoted: {item.quotedAmount}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
+      {/* Closing costs by stage */}
+      <div className="mt-4 space-y-3">
+        {/* Next payment due */}
+        {nextItem && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-600">Next payment due</p>
+                <p className="mt-2 text-base font-semibold text-ink-950">{nextItem.name}</p>
+                <p className="mt-1 text-xs text-ink-500">At: {nextItem.dueStage}</p>
+                <p className="mt-1 text-xs text-ink-500">{nextItem.description}</p>
               </div>
+              <DualAmount aed={nextItem.amountAED} />
             </div>
-          );
-        })}
+          </div>
+        )}
+
+        {/* Transfer costs summary */}
+        <div className="rounded-2xl bg-fog-50 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-ink-400">At transfer</p>
+              <p className="mt-2 text-base font-semibold text-ink-950">Closing costs total</p>
+              <p className="mt-1 text-xs text-ink-500">DLD fee, broker, trustee, mortgage registration, title deed</p>
+            </div>
+            <DualAmount aed={transferItems.reduce((s, i) => s + i.amountAED, 0)} />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowBreakdown(!showBreakdown)}
+            className="mt-4 text-xs text-ink-400 underline underline-offset-2 transition hover:text-ink-800"
+          >
+            {showBreakdown ? "Hide breakdown" : "See breakdown"}
+          </button>
+
+          {showBreakdown && (
+            <div className="mt-4 space-y-3 border-t border-fog-200 pt-4">
+              {transferItems.map((item) => (
+                <div key={item.name} className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-ink-800">{item.name}</p>
+                    <p className="text-xs text-ink-400">{item.description}</p>
+                  </div>
+                  <DualAmount aed={item.amountAED} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Total closing costs */}
+        <div className="rounded-2xl bg-fog-50 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-ink-400">Total closing costs</p>
+              <p className="mt-1 text-xs text-ink-400">Valuation + DLD + broker + trustee + mortgage reg + title deed</p>
+            </div>
+            <DualAmount aed={totalClosingCosts} />
+          </div>
+        </div>
+
+        {/* 10% cheque note */}
+        <div className="rounded-2xl border border-fog-200 bg-white/60 p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-ink-400">10% Deposit cheque — held, not a cost</p>
+          <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+            <p className="max-w-sm text-xs text-ink-500">{depositCheque.description}</p>
+            <div className="text-right">
+              <p className="text-sm font-medium text-ink-400 line-through">{fmtAED(depositCheque.amountAED)}</p>
+              <p className="text-xs text-ink-400">Returned at transfer</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

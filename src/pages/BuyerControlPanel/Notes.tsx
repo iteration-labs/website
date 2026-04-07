@@ -1,32 +1,50 @@
-export default function Notes() {
+import { useState } from 'react';
+import type { FaqItem } from './data';
+
+type CommonQuestionsProps = {
+  items: FaqItem[];
+};
+
+export default function CommonQuestions({ items }: CommonQuestionsProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
   return (
     <section className="section-card p-6 sm:p-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="section-title">Notes</p>
-          <h2 className="mt-2 font-display text-2xl text-ink-950">Your decisions and context</h2>
-          <p className="mt-1 text-sm text-ink-600">
-            Capture anything you want remembered for later stages.
-          </p>
-        </div>
-        <button
-          type="button"
-          disabled
-          className="rounded-full bg-fog-100 px-4 py-2 text-xs uppercase tracking-[0.2em] text-ink-400"
-        >
-          Structure my notes (coming soon)
-        </button>
+      <div>
+        <p className="section-title">Common questions</p>
+        <h2 className="mt-2 font-display text-2xl text-ink-950">Things buyers always ask</h2>
+        <p className="mt-1 text-sm text-ink-400">
+          So you don't have to ask Mallika again.
+        </p>
       </div>
 
-      <div className="mt-6">
-        <textarea
-          rows={6}
-          placeholder="Add your notes, priorities, and any decisions made so far."
-          className="w-full resize-none rounded-2xl border border-fog-200 bg-white/90 px-4 py-3 text-sm text-ink-800 focus:border-reed-500 focus:outline-none"
-        />
-        <p className="mt-3 text-xs text-ink-400">
-          Notes are private to the buyer unless shared intentionally.
-        </p>
+      <div className="mt-6 space-y-2">
+        {items.map((item, index) => {
+          const isOpen = openIndex === index;
+          return (
+            <div
+              key={index}
+              className={`rounded-2xl border transition-colors ${
+                isOpen ? "border-fog-200 bg-white shadow-bcp-soft" : "border-transparent bg-fog-50"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setOpenIndex(isOpen ? null : index)}
+                className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                aria-expanded={isOpen}
+              >
+                <p className="text-sm font-semibold text-ink-950">{item.question}</p>
+                <span className="shrink-0 text-xs text-ink-400">{isOpen ? "▲" : "▼"}</span>
+              </button>
+              {isOpen && (
+                <div className="px-5 pb-5">
+                  <p className="text-sm text-ink-600 leading-relaxed">{item.answer}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </section>
   );
