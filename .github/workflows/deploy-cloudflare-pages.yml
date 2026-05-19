@@ -32,6 +32,14 @@ jobs:
         run: npm ci
 
       - name: Build site
+        env:
+          # Base URL of the public HomeOps recipes API (family-ops repo,
+          # RecipesApiFunction). Set as a GitHub Actions repository variable:
+          # Settings → Secrets and variables → Actions → Variables → New
+          # repository variable → VITE_RECIPES_API_BASE.
+          # Value is the ApiUrl output from `sam deploy` on family-ops, e.g.
+          # https://abcd1234.execute-api.ap-southeast-1.amazonaws.com
+          VITE_RECIPES_API_BASE: ${{ vars.VITE_RECIPES_API_BASE }}
         run: npm run build
 
       - name: Ensure Cloudflare Pages project exists
