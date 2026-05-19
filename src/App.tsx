@@ -7,6 +7,8 @@ import { Projects } from './components/Projects';
 import { PageConnector } from './components/Scribbles';
 import { SecondNatureDemo } from './pages/SecondNatureDemo';
 import { BuyerControlPanel } from './pages/BuyerControlPanel';
+import { RecipeDetail } from './pages/RecipeDetail';
+import { RecipesList } from './pages/RecipesList';
 
 export default function App() {
   const prefersReducedMotion = useReducedMotion();
@@ -18,6 +20,17 @@ export default function App() {
 
   if (pathname === '/buyer-control-panel-demo') {
     return <BuyerControlPanel />;
+  }
+
+  // /recipes — list page. /recipes/<slug> — detail page. Both fetch from
+  // the family-ops public recipes API (VITE_RECIPES_API_BASE). Routing is
+  // pathname-switch to match the existing pattern in this file.
+  if (pathname === '/recipes') {
+    return <RecipesList />;
+  }
+  const recipeMatch = pathname.match(/^\/recipes\/([A-Za-z0-9-]+)$/);
+  if (recipeMatch) {
+    return <RecipeDetail slug={recipeMatch[1]!} />;
   }
 
   return (
